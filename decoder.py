@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
+import copy
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -37,7 +38,7 @@ class DecoderLayer(nn.Module):
 class Decoder(nn.Module):
     def __init__(self, decoder_layer, num_layers):
         super(Decoder, self).__init__()
-        self.layers = nn.ModuleList([decoder_layer for _ in range(num_layers)])
+        self.layers = nn.ModuleList([copy.deepcopy(decoder_layer) for _ in range(num_layers)])
         self.num_layers = num_layers
     def forward(self, tgt, memory, tgt_mask=None, memory_mask=None, tgt_key_padding_mask=None, memory_key_padding_mask=None, pos=None, query_pos=None):
         output = tgt
