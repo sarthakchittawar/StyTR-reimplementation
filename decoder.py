@@ -5,6 +5,7 @@ import copy
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# NOTE: we might need to add seperate dropout variables
 class DecoderLayer(nn.Module):
     def __init__(self, embed_dim, num_heads, ff_hidden_dim, dropout):
         super(DecoderLayer, self).__init__()
@@ -15,6 +16,7 @@ class DecoderLayer(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.relu = nn.ReLU()
         self.embed_dim = embed_dim
+        
     def forward(self, tgt, memory, tgt_mask=None, memory_mask=None, tgt_key_padding_mask=None, memory_key_padding_mask=None, pos=None, query_pos=None):
         tgt2 = nn.LayerNorm(self.embed_dim)(tgt)
         if pos is not None:
@@ -32,18 +34,25 @@ class DecoderLayer(nn.Module):
         tgt2 = nn.LayerNorm(self.embed_dim)(tgt)
         tgt2 = self.fc2(self.relu(self.fc1(tgt2)))
         tgt += self.dropout(tgt2)
+        tgt = nn.LayerNorm(self.embed_dim)(tgt)
         return tgt        
 
 
 class Decoder(nn.Module):
-    def __init__(self, decoder_layer, num_layers):
+    def __init__(self, decoder_layer, num_layers, norm=None):
         super(Decoder, self).__init__()
         self.layers = nn.ModuleList([copy.deepcopy(decoder_layer) for _ in range(num_layers)])
         self.num_layers = num_layers
+        self.norm = norm
+        
     def forward(self, tgt, memory, tgt_mask=None, memory_mask=None, tgt_key_padding_mask=None, memory_key_padding_mask=None, pos=None, query_pos=None):
         output = tgt
         for layer in self.layers:
             output = layer(output, memory, tgt_mask=tgt_mask, memory_mask=memory_mask,
                           tgt_key_padding_mask=tgt_key_padding_mask, memory_key_padding_mask=memory_key_padding_mask,
                           pos=pos, query_pos=query_pos)
+            
+        if self.norm is not None:
+            output = self.norm(output)
+            
         return output
