@@ -5,7 +5,6 @@ import copy
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# NOTE: we might need to add seperate dropout variables
 class DecoderLayer(nn.Module):
     def __init__(self, embed_dim, num_heads, ff_hidden_dim, dropout):
         super(DecoderLayer, self).__init__()
@@ -15,10 +14,16 @@ class DecoderLayer(nn.Module):
         self.fc2 = nn.Linear(ff_hidden_dim, embed_dim)
         self.dropout = nn.Dropout(dropout)
         self.relu = nn.ReLU()
+        
         self.embed_dim = embed_dim
+        self.norm = nn.LayerNorm(embed_dim)
+        self.norm1 = nn.LayerNorm(embed_dim)
+        self.norm2 = nn.LayerNorm(embed_dim)
+        self.norm3 = nn.LayerNorm(embed_dim)
+        
         
     def forward(self, tgt, memory, tgt_mask=None, memory_mask=None, tgt_key_padding_mask=None, memory_key_padding_mask=None, pos=None, query_pos=None):
-        tgt2 = nn.LayerNorm(self.embed_dim)(tgt)
+        tgt2 = self.norm(tgt)
         if pos is not None:
             temp_tgt2 = tgt2 + query_pos
         else:
@@ -26,15 +31,17 @@ class DecoderLayer(nn.Module):
         q = k = temp_tgt2
         tgt2 = self.self_attn(q, k, value=tgt2, attn_mask=tgt_mask, 
                               key_padding_mask=tgt_key_padding_mask)[0]
-        tgt += self.dropout(tgt2)
-        tgt2 = nn.LayerNorm(self.embed_dim)(tgt)
+        tgt = tgt + self.dropout(tgt2)
+        tgt2 = self.norm1(tgt)
         tgt2 = self.multihead_attn(query=tgt2, key=memory, value=memory, attn_mask=memory_mask,
                                    key_padding_mask=memory_key_padding_mask)[0]
-        tgt += self.dropout(tgt2)
-        tgt2 = nn.LayerNorm(self.embed_dim)(tgt)
-        tgt2 = self.fc2(self.relu(self.fc1(tgt2)))
-        tgt += self.dropout(tgt2)
-        tgt = nn.LayerNorm(self.embed_dim)(tgt)
+        tgt = tgt + self.dropout(tgt2)
+        tgt2 = self.norm2(tgt)
+        tgt2 = self.fc1(tgt2)
+        tgt2 = self.relu(tgt2)
+        tgt2 = self.fc2(tgt2)
+        tgt = tgt + self.dropout(tgt2)
+        tgt = self.norm3(tgt)
         return tgt        
 
 
@@ -55,4 +62,4 @@ class Decoder(nn.Module):
         if self.norm is not None:
             output = self.norm(output)
             
-        return output
+        return output.unsqueeze(0)
