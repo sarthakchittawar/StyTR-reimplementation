@@ -7,8 +7,8 @@ from decoder import Decoder, DecoderLayer
 import numpy as np
 
 class Transformer(nn.Module):
-    def __init__(self, dimensions, num_heads, num_encoder_layers, 
-                 num_decoder_layers, feedforward_dimensions, dropout):
+    def __init__(self, dimensions=512, num_heads=8, num_encoder_layers=3, 
+                 num_decoder_layers=3, feedforward_dimensions=2048, dropout=0.1):
         
         super(Transformer, self).__init__()
         self.dimensions = dimensions
@@ -41,3 +41,4 @@ class Transformer(nn.Module):
         hs = hs.permute(1, 2, 0)
         hs = hs.view(B, C, -1, H)
         return output
+
