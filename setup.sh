@@ -1,11 +1,12 @@
 mkdir /scratch/sarthak
+cd /scratch/sarthak
 wait
-scp sarthak.chittawar@ada.iiit.ac.in:/share1/sanika/wikiart.zip /scratch/sarthak &
-scp sarthak.chittawar@ada.iiit.ac.in:/share1/dataset/coco/train2017.tar /scratch/sarthak &
-scp sarthak.chittawar@ada.iiit.ac.in:/share1/dataset/coco/val2017.tar /scratch/sarthak &
-scp sarthak.chittawar@ada.iiit.ac.in:/share1/dataset/coco/test2017.tar /scratch/sarthak &
+scp sarthak.chittawar@ada.iiit.ac.in:/share1/sanika/wikiart.zip . &
+scp sarthak.chittawar@ada.iiit.ac.in:/share1/dataset/coco/train2017.tar . &
+scp sarthak.chittawar@ada.iiit.ac.in:/share1/dataset/coco/val2017.tar . &
+scp sarthak.chittawar@ada.iiit.ac.in:/share1/dataset/coco/test2017.tar . &
 wait
-unzip /scratch/sarthak/wikiart
-tar -xvf /scratch/sarthak/train2017.tar
-tar -xvf /scratch/sarthak/val2017.tar
-tar -xvf /scratch/sarthak/test2017.tar
+unzip wikiart
+tar -xvf train2017.tar
+tar -xvf val2017.tar
+tar -xvf test2017.tar
