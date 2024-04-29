@@ -14,8 +14,6 @@ from tensorboardX import SummaryWriter
 import transformer
 import stytr as StyTR
 
-torch.autograd.set_detect_anomaly(True)
-
 def InfiniteSampler(n):
     i = n - 1
     order = np.random.permutation(n)
@@ -84,14 +82,12 @@ def warmup_learning_rate(optimizer, iteration_count):
 
 
 parser = argparse.ArgumentParser()
-# Basic options
 parser.add_argument('--content_dir', default='/scratch/sarthak/datasets/train2017', type=str,   
                     help='Directory path to a batch of content images')
-parser.add_argument('--style_dir', default='/scratch/sarthak/datasets/style', type=str,  #wikiart dataset crawled from https://www.wikiart.org/
+parser.add_argument('--style_dir', default='/scratch/sarthak/datasets/style', type=str,
                     help='Directory path to a batch of style images')
-parser.add_argument('--vgg', type=str, default='./vgg_normalised.pth')  #run the train.py, please download the pretrained vgg checkpoint
+parser.add_argument('--vgg', type=str, default='./vgg_normalised.pth')
 
-# training options
 parser.add_argument('--save_dir', default='./experiments',
                     help='Directory to save the model')
 parser.add_argument('--log_dir', default='./logs',
@@ -110,8 +106,7 @@ parser.add_argument('--hidden_dim', default=512, type=int,
                         help="Size of the embeddings (dimension of the transformer)")
 args = parser.parse_args()
 
-USE_CUDA = torch.cuda.is_available()
-device = torch.device("cuda:0" if USE_CUDA else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 if not os.path.exists(args.save_dir):
     os.makedirs(args.save_dir)
@@ -124,7 +119,7 @@ vgg = StyTR.vgg
 vgg.load_state_dict(torch.load(args.vgg))
 vgg = nn.Sequential(*list(vgg.children())[:44])
 
-decoder = StyTR.decoder
+decoder = StyTR.decoder_arch
 embedding = StyTR.PatchEmbed()
 
 Trans = transformer.Transformer()
@@ -133,7 +128,7 @@ with torch.no_grad():
 network.train()
 
 network.to(device)
-network = nn.DataParallel(network, device_ids=[0, 1])
+network = nn.DataParallel(network, device_ids=[0, 1, 2])
 content_tf = train_transform()
 style_tf = train_transform()
 
@@ -211,7 +206,7 @@ for i in tqdm(range(args.max_iter)):
                    '{:s}/transformer_iter_{:d}.pth'.format(args.save_dir,
                                                            i + 1))
 
-        state_dict = network.module.decode.state_dict()
+        state_dict = network.module.decoder.state_dict()
         for key in state_dict.keys():
             state_dict[key] = state_dict[key].to(torch.device('cpu'))
         torch.save(state_dict,

@@ -8,7 +8,7 @@ from itertools import repeat
 from typing import Optional, List
 from torch import Tensor
 
-decoder = nn.Sequential(
+decoder_arch = nn.Sequential(
     nn.ReflectionPad2d((1, 1, 1, 1)),
     nn.Conv2d(512, 256, (3, 3)),
     nn.ReLU(),
@@ -163,23 +163,23 @@ class PatchEmbed(nn.Module):
         return x
     
     
-class MLP(nn.Module):
-    """ FFN layer architecture """
-    def __init__(self, input_dim, hidden_dim, output_dim, num_layers):
-        super().__init__()
-        self.num_layers = num_layers
-        self.layers = nn.ModuleList()
+# class MLP(nn.Module):
+#     """ FFN layer architecture """
+#     def __init__(self, input_dim, hidden_dim, output_dim, num_layers):
+#         super().__init__()
+#         self.num_layers = num_layers
+#         self.layers = nn.ModuleList()
         
-        layer_dims = [input_dim] + [hidden_dim] * (num_layers - 1) + [output_dim]
-        for i in range(num_layers):
-            self.layers.append(nn.Linear(layer_dims[i], layer_dims[i + 1]))
+#         layer_dims = [input_dim] + [hidden_dim] * (num_layers - 1) + [output_dim]
+#         for i in range(num_layers):
+#             self.layers.append(nn.Linear(layer_dims[i], layer_dims[i + 1]))
     
-    def forward(self, x):
-        for i, layer in enumerate(self.layers):
-            x = layer(x)
-            if i < self.num_layers - 1:
-                x = F.relu(x)
-        return x
+#     def forward(self, x):
+#         for i, layer in enumerate(self.layers):
+#             x = layer(x)
+#             if i < self.num_layers - 1:
+#                 x = F.relu(x)
+#         return x
     
 class StyTrans(nn.Module):
     """ Style Transfer Model """

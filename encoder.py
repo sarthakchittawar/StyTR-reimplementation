@@ -11,7 +11,8 @@ class EncoderLayer(nn.Module):
         self.self_attn = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout)
         
         self.fc1 = nn.Linear(embed_dim, ff_hidden_dim)
-        self.dropout = nn.Dropout(dropout)
+        self.dropout1 = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
         self.fc2 = nn.Linear(ff_hidden_dim, embed_dim)
         
         self.relu = nn.ReLU()
@@ -29,10 +30,10 @@ class EncoderLayer(nn.Module):
         q = k = src_with_pos_embed
         
         src2 = self.self_attn(q, k, value=src, attn_mask=src_mask, key_padding_mask=src_key_padding_mask)[0]
-        src = src + self.dropout(src2)
+        src = src + self.dropout1(src2)
         src = self.norm1(src)
         src2 = self.fc2(self.relu(self.fc1(src)))
-        src = src + self.dropout(src2)
+        src = src + self.dropout2(src2)
         src = self.norm2(src)
         
         return src
