@@ -104,6 +104,7 @@ parser.add_argument('--position_embedding', default='sine', type=str, choices=('
                         help="Type of positional embedding to use on top of the image features")
 parser.add_argument('--hidden_dim', default=512, type=int,
                         help="Size of the embeddings (dimension of the transformer)")
+parser.add_argument('--num_gpus', default=1, type=int, help="Number of GPUs for training")
 args = parser.parse_args()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -128,7 +129,7 @@ with torch.no_grad():
 network.train()
 
 network.to(device)
-network = nn.DataParallel(network, device_ids=[0, 1, 2])
+network = nn.DataParallel(network, device_ids=[i for i in range(args.num_gpus)])
 content_tf = train_transform()
 style_tf = train_transform()
 
