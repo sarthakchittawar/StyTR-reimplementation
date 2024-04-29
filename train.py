@@ -14,6 +14,8 @@ from tensorboardX import SummaryWriter
 import transformer
 import stytr as StyTR
 
+torch.autograd.set_detect_anomaly(True)
+
 def InfiniteSampler(n):
     i = n - 1
     order = np.random.permutation(n)
@@ -97,7 +99,7 @@ parser.add_argument('--log_dir', default='./logs',
 parser.add_argument('--lr', type=float, default=5e-4)
 parser.add_argument('--lr_decay', type=float, default=1e-5)
 parser.add_argument('--max_iter', type=int, default=160000)
-parser.add_argument('--batch_size', type=int, default=8)
+parser.add_argument('--batch_size', type=int, default=4)
 parser.add_argument('--style_weight', type=float, default=10.0)
 parser.add_argument('--content_weight', type=float, default=7.0)
 parser.add_argument('--n_threads', type=int, default=16)
@@ -131,7 +133,7 @@ with torch.no_grad():
 network.train()
 
 network.to(device)
-network = nn.DataParallel(network, device_ids=[0, 1, 2, 3])
+network = nn.DataParallel(network, device_ids=[0, 1])
 content_tf = train_transform()
 style_tf = train_transform()
 
@@ -152,7 +154,7 @@ style_iter = iter(data.DataLoader(
 
 optimizer = torch.optim.Adam([ 
                               {'params': network.module.transformer.parameters()},
-                              {'params': network.module.decode.parameters()},
+                              {'params': network.module.decoder.parameters()},
                               {'params': network.module.embedding.parameters()},        
                               ], lr=args.lr)
 

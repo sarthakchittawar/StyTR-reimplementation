@@ -16,6 +16,9 @@ class EncoderLayer(nn.Module):
         
         self.relu = nn.ReLU()
         self.embed_dim = embed_dim
+        self.norm1 = nn.LayerNorm(embed_dim)
+        self.norm2 = nn.LayerNorm(embed_dim)
+        
         
     def forward(self, src, src_mask=None, src_key_padding_mask=None, pos=None):
         if pos is not None:
@@ -26,18 +29,18 @@ class EncoderLayer(nn.Module):
         q = k = src_with_pos_embed
         
         src2 = self.self_attn(q, k, value=src, attn_mask=src_mask, key_padding_mask=src_key_padding_mask)[0]
-        src += self.dropout(src2)
-        src = nn.LayerNorm(self.embed_dim)(src)
+        src = src + self.dropout(src2)
+        src = self.norm1(src)
         src2 = self.fc2(self.relu(self.fc1(src)))
-        src += self.dropout(src2)
-        src = nn.LayerNorm(self.embed_dim)(src)
+        src = src + self.dropout(src2)
+        src = self.norm2(src)
         
         return src
         
 class Encoder(nn.Module):
     def __init__(self, encoder_layer, num_layers, norm=None):
         super().__init__()
-        self.layers = nn.ModuleList([copy.deepcopy(encoder_layer) for i in range(num_layers)])
+        self.layers = nn.ModuleList([copy.deepcopy(encoder_layer) for _ in range(num_layers)])
         self.num_layers = num_layers
         self.norm = norm
         
@@ -45,7 +48,7 @@ class Encoder(nn.Module):
         output = src
         for layer in self.layers:
             output = layer(output, src_mask=mask, src_key_padding_mask=src_key_padding_mask, pos=pos)
-            
+        
         if self.norm is not None:
             output = self.norm(output)
             

@@ -29,16 +29,18 @@ class Transformer(nn.Module):
         positional_content = self.conv(self.average_pool(content))
         positional_content = F.interpolate(positional_content, size=style.size()[2:], mode='bilinear')
         style = style.flatten(2).permute(2, 0, 1)
-        pos_encoding_style = pos_encoding_style.flatten(2).permute(2, 0, 1)
+        if pos_encoding_style is not None:
+            pos_encoding_style = pos_encoding_style.flatten(2).permute(2, 0, 1)
         content = content.flatten(2).permute(2, 0, 1)
-        pos_encoding_content = pos_encoding_content.flatten(2).permute(2, 0, 1)
+        if pos_encoding_content is not None:
+            pos_encoding_content = pos_encoding_content.flatten(2).permute(2, 0, 1)
 
         style = self.encoder_style(style, mask, pos_encoding_style)
         content = self.encoder_content(content, mask, pos_encoding_content)
         output = self.decoder(style, content, mask)[0]
-        N, B, C= output.shape()         
+        N, B, C= output.shape       
         H = int(np.sqrt(N))
-        hs = hs.permute(1, 2, 0)
-        hs = hs.view(B, C, -1, H)
+        output = output.permute(1, 2, 0)
+        output = output.view(B, C, -1, H)
         return output
 
