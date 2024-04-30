@@ -13,6 +13,7 @@ from torchvision.utils import save_image
 from tensorboardX import SummaryWriter
 import transformer
 import stytr as StyTR
+import wandb
 
 def InfiniteSampler(n):
     i = n - 1
@@ -98,7 +99,7 @@ parser.add_argument('--max_iter', type=int, default=160000)
 parser.add_argument('--batch_size', type=int, default=4)
 parser.add_argument('--style_weight', type=float, default=10.0)
 parser.add_argument('--content_weight', type=float, default=7.0)
-parser.add_argument('--n_threads', type=int, default=16)
+parser.add_argument('--n_threads', type=int, default=10)
 parser.add_argument('--save_model_interval', type=int, default=10000)
 parser.add_argument('--position_embedding', default='sine', type=str, choices=('sine', 'learned'),
                         help="Type of positional embedding to use on top of the image features")
@@ -158,8 +159,13 @@ optimizer = torch.optim.Adam([
 if not os.path.exists(args.save_dir+"/test"):
     os.makedirs(args.save_dir+"/test")
 
+wandb.init(project="StyTR",name="StyTR")
 
-
+content_loss_sum = 0.0
+style_loss_sum = 0.0
+total_image_loss_sum = 0.0
+feature_loss_sum = 0.0
+total_loss_sum = 0.0
 for i in tqdm(range(args.max_iter)):
 
     if i < 1e4:
@@ -170,7 +176,7 @@ for i in tqdm(range(args.max_iter)):
     # print('learning_rate: %s' % str(optimizer.param_groups[0]['lr']))
     content_images = next(content_iter).to(device)
     style_images = next(style_iter).to(device)  
-    out, loss_c, loss_s,l_identity1, l_identity2 = network(content_images, style_images)
+    out, loss_c, loss_s, total_image_loss, feature_loss = network(content_images, style_images)
 
     if i % 100 == 0:
         output_name = '{:s}/test/{:s}{:s}'.format(
@@ -183,11 +189,24 @@ for i in tqdm(range(args.max_iter)):
         
     loss_c = args.content_weight * loss_c
     loss_s = args.style_weight * loss_s
-    loss = loss_c + loss_s + (l_identity1 * 70) + (l_identity2 * 1) 
+    loss = loss_c + loss_s + (total_image_loss * 70) + (feature_loss * 1) 
   
     print(loss.sum().cpu().detach().numpy(),"-content:",loss_c.sum().cpu().detach().numpy(),"-style:",loss_s.sum().cpu().detach().numpy()
-              ,"-l1:",l_identity1.sum().cpu().detach().numpy(),"-l2:",l_identity2.sum().cpu().detach().numpy()
+              ,"-l1:",total_image_loss.sum().cpu().detach().numpy(),"-l2:",feature_loss.sum().cpu().detach().numpy()
               )
+    content_loss_sum += loss_c.sum().cpu().detach().numpy()
+    style_loss_sum += loss_s.sum().cpu().detach().numpy()
+    total_image_loss_sum += total_image_loss.sum().cpu().detach().numpy()
+    feature_loss_sum += feature_loss.sum().cpu().detach().numpy()
+    total_loss_sum += loss.sum().cpu().detach().numpy()
+
+    if i % 50 == 0 and i != 0:
+        wandb.log({"content_loss":content_loss_sum/50,"style_loss":style_loss_sum/50,"total_image_loss":total_image_loss_sum/50,"feature_loss":feature_loss_sum/50,"total_loss":total_loss_sum/50})
+        content_loss_sum = 0.0
+        style_loss_sum = 0.0
+        total_image_loss_sum = 0.0
+        feature_loss_sum = 0.0
+        total_loss_sum = 0.0
        
     optimizer.zero_grad()
     loss.sum().backward()
@@ -195,8 +214,8 @@ for i in tqdm(range(args.max_iter)):
 
     writer.add_scalar('loss_content', loss_c.sum().item(), i + 1)
     writer.add_scalar('loss_style', loss_s.sum().item(), i + 1)
-    writer.add_scalar('loss_identity1', l_identity1.sum().item(), i + 1)
-    writer.add_scalar('loss_identity2', l_identity2.sum().item(), i + 1)
+    writer.add_scalar('loss_identity1', total_image_loss.sum().item(), i + 1)
+    writer.add_scalar('loss_identity2', feature_loss.sum().item(), i + 1)
     writer.add_scalar('total_loss', loss.sum().item(), i + 1)
 
     if (i + 1) % args.save_model_interval == 0 or (i + 1) == args.max_iter:
@@ -222,5 +241,6 @@ for i in tqdm(range(args.max_iter)):
 
                                                     
 writer.close()
+wandb.finish()
 
 
