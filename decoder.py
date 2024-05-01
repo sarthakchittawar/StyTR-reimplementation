@@ -1,3 +1,7 @@
+'''
+Decoder module for the transformer model
+'''
+
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
@@ -5,6 +9,7 @@ import copy
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# One layer of the decoder
 class DecoderLayer(nn.Module):
     def __init__(self, embed_dim, num_heads, ff_hidden_dim, dropout):
         super(DecoderLayer, self).__init__()

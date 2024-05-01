@@ -1,3 +1,9 @@
 clip/encodings.pt
 clip/model_*.pt
 clip/metadata.json
+experiments/
+wandb/
+videos/
+__pycache__/
+logs/
+train_out.txt

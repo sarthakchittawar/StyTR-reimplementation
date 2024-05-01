@@ -1,7 +1,5 @@
-import torch
 import torch.nn.functional as F
 import torch.nn as nn
-import copy
 from encoder import Encoder, EncoderLayer
 from decoder import Decoder, DecoderLayer
 import numpy as np

@@ -163,24 +163,6 @@ class PatchEmbed(nn.Module):
         return x
     
     
-# class MLP(nn.Module):
-#     """ FFN layer architecture """
-#     def __init__(self, input_dim, hidden_dim, output_dim, num_layers):
-#         super().__init__()
-#         self.num_layers = num_layers
-#         self.layers = nn.ModuleList()
-        
-#         layer_dims = [input_dim] + [hidden_dim] * (num_layers - 1) + [output_dim]
-#         for i in range(num_layers):
-#             self.layers.append(nn.Linear(layer_dims[i], layer_dims[i + 1]))
-    
-#     def forward(self, x):
-#         for i, layer in enumerate(self.layers):
-#             x = layer(x)
-#             if i < self.num_layers - 1:
-#                 x = F.relu(x)
-#         return x
-    
 class StyTrans(nn.Module):
     """ Style Transfer Model """
     def __init__(self, encoder, decoder, PatchEmbed, transformer, args):
