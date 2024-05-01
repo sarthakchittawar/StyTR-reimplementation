@@ -4,17 +4,27 @@ from encoder import Encoder, EncoderLayer
 from decoder import Decoder, DecoderLayer
 import numpy as np
 
+def get_activation_func(activation):
+    """Return an activation function given a string"""
+    if activation == "relu":
+        return F.relu
+    if activation == "gelu":
+        return F.gelu
+    if activation == "glu":
+        return F.glu
+    raise RuntimeError(F"activation should be relu/gelu, not {activation}.")
+
 class Transformer(nn.Module):
     def __init__(self, dimensions=512, num_heads=8, num_encoder_layers=3, 
-                 num_decoder_layers=3, feedforward_dimensions=2048, dropout=0.1):
+                 num_decoder_layers=3, feedforward_dimensions=2048, dropout=0.1, activation_func='relu'):
         
         super(Transformer, self).__init__()
         self.dimensions = dimensions
         self.num_heads = num_heads
-        encoder_layer = EncoderLayer(dimensions, num_heads, feedforward_dimensions, dropout)
+        encoder_layer = EncoderLayer(dimensions, num_heads, feedforward_dimensions, dropout, activation_func)
         self.encoder_style = Encoder(encoder_layer, num_encoder_layers)
         self.encoder_content = Encoder(encoder_layer, num_encoder_layers)
-        decoder_layer = DecoderLayer(dimensions, num_heads, feedforward_dimensions, dropout)
+        decoder_layer = DecoderLayer(dimensions, num_heads, feedforward_dimensions, dropout, activation_func)
         decoder_norm = nn.LayerNorm(dimensions)
         self.decoder = Decoder(decoder_layer, num_decoder_layers, decoder_norm)
         

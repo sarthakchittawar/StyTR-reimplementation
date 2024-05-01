@@ -6,19 +6,20 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import copy
+from transformer import get_activation_func
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # One layer of the encoder
 class EncoderLayer(nn.Module):
-    def __init__(self, embed_dim, num_heads, ff_hidden_dim, dropout):
+    def __init__(self, embed_dim, num_heads, ff_hidden_dim, dropout, activation_func='relu'):
         super(EncoderLayer, self).__init__()
         self.self_attn = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout)
         
         self.fc1 = nn.Linear(embed_dim, ff_hidden_dim)
         self.fc2 = nn.Linear(ff_hidden_dim, embed_dim)
         
-        self.relu = nn.ReLU()
+        self.relu = get_activation_func(activation_func)
         self.embed_dim = embed_dim
         self.norm1 = nn.LayerNorm(embed_dim)
         self.norm2 = nn.LayerNorm(embed_dim)
