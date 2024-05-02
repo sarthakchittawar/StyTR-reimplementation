@@ -8,7 +8,7 @@ from itertools import repeat
 from typing import Optional, List
 from torch import Tensor
 
-# consists of the decoder architecture
+# consists of the final decoder architecture (not the same as in transformer.py)
 decoder_arch = nn.Sequential(
     nn.ReflectionPad2d((1, 1, 1, 1)),
     nn.Conv2d(512, 256, (3, 3)),
@@ -151,7 +151,7 @@ def nested_tensor_from_tensor_list(tensor_list: List[Tensor]):
     return NestedTensor(tensor, mask)
 
 class PatchEmbed(nn.Module):
-    ''' TODO: define this '''
+    ''' Gets a patched embedding of the content/style images '''
     def __init__(self, img_size=256, patch_size=8, in_channels=3, embed_dim=512):
         super().__init__()
         img_size = make_tuple(img_size)
@@ -173,6 +173,8 @@ class StyTrans(nn.Module):
     def __init__(self, encoder, decoder, PatchEmbed, transformer, args):
         super().__init__()
         enc_layers = list(encoder.children())
+        
+        # see vgg architecture
         self.enc_1 = nn.Sequential(*enc_layers[:4])  # input -> relu1_1
         self.enc_2 = nn.Sequential(*enc_layers[4:11])  # relu1_1 -> relu2_1
         self.enc_3 = nn.Sequential(*enc_layers[11:18])  # relu2_1 -> relu3_1
@@ -184,7 +186,6 @@ class StyTrans(nn.Module):
                 param.requires_grad = False
                 
         self.transformer = transformer
-        hidden_dim = transformer.dimensions
         self.mse_loss = nn.MSELoss()
         self.decoder = decoder
         self.embedding = PatchEmbed
@@ -197,16 +198,9 @@ class StyTrans(nn.Module):
             results.append(x)
         return results[1:]
     
-    def calc_content_loss(self, content_input, content_target):
-        ''' Function to calculate content loss while training '''
-        assert content_input.size() == content_target.size()
-        assert ~content_target.requires_grad
-        return self.mse_loss(content_input, content_target)
-    
     def calc_mean_std(self, vec):
         ''' Function to calculate mean & variance of a vector '''
         size = vec.size()
-        assert (len(size) == 4)
         
         N, C = size[:2]
         variance = vec.view(N, C, -1).var(dim=2) + 1e-5 # epsilon = 1e-5
@@ -214,18 +208,21 @@ class StyTrans(nn.Module):
         mean = vec.view(N, C, -1).mean(dim=2).view(N, C, 1, 1)
         return mean, std
     
+    def calc_content_loss(self, content_input, content_target):
+        ''' Function to calculate content loss while training '''
+        assert content_input.size() == content_target.size()
+        assert ~content_target.requires_grad
+        return self.mse_loss(content_input, content_target)
+    
     def calc_style_loss(self, style_input, style_target):
         ''' Function to calculate style loss while training '''
-        assert style_input.size() == style_target.size()
-        assert ~style_target.requires_grad
-        
+                
         # return effective loss as sum of mean mse and std mse
         input_mean, input_std = self.calc_mean_std(style_input)
         target_mean, target_std = self.calc_mean_std(style_target)
         
         eff_loss = self.mse_loss(input_mean, target_mean) + self.mse_loss(input_std, target_std)
         return eff_loss
-        
         
     def forward(self, content: NestedTensor, style: NestedTensor):
         """ The forward expects a NestedTensor, which consists of:
@@ -246,7 +243,7 @@ class StyTrans(nn.Module):
         content_proj = self.embedding(content.tensors)
         style_proj = self.embedding(style.tensors)
         
-        # postional embedding calculated in transformer.py
+        # If cape=True in self.transformer, then pos_c gets updated with a positional encoding
         pos_c = None
         pos_s = None
         mask = None
@@ -283,12 +280,13 @@ class StyTrans(nn.Module):
         for i in range(5):
             style_loss += self.calc_style_loss(trans_features[i], style_features[i])            
         
-        # Identity loss
         cc = self.decoder(self.transformer(content_proj, content_proj, pos_c, pos_c, mask))
         ss = self.decoder(self.transformer(style_proj, style_proj, pos_s, pos_s, mask))
         
+        # Identity loss between initial and current content/style
         i_loss1 = self.calc_content_loss(cc, content_init) + self.calc_content_loss(ss, style_init)
         
+        # Identity loss between initial and current intermediate content/style encoding
         i_loss2 = 0
         cc_features = self.intermediate_encoding(cc)
         ss_features = self.intermediate_encoding(ss)

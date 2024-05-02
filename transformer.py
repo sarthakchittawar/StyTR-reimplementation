@@ -11,9 +11,7 @@ def get_activation_func(actv):
         return F.relu
     if actv == 'gelu':
         return F.gelu
-    if actv == 'glu':
-        return F.glu
-    raise RuntimeError(F"Activation Function should be relu/gelu/glu, not {actv}!")
+    raise RuntimeError(F"Activation Function should be relu/gelu, not {actv}!")
 
 from encoder import Encoder, EncoderLayer
 from decoder import Decoder, DecoderLayer
@@ -67,11 +65,11 @@ class Transformer(nn.Module):
             pos_encoding_content = pos_encoding_content.flatten(2).permute(2, 0, 1)
 
         # Pass style and content through encoder layers
-        style = self.encoder_style(style, mask, pos_encoding_style)
-        content = self.encoder_content(content, mask, pos_encoding_content)
+        style = self.encoder_style(style, mask, position=pos_encoding_style)
+        content = self.encoder_content(content, mask, position=pos_encoding_content)
         
         # Pass encoded style and content through decoder
-        output = self.decoder(content, style, mask)[0]
+        output = self.decoder(content, style, mask, style_pos=pos_encoding_style, content_pos=pos_encoding_content)[0]
         
         # rearranging dimensions for viewing in batches
         N, B, C= output.shape       

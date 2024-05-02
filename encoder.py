@@ -27,7 +27,6 @@ class EncoderLayer(nn.Module):
         self.norm2 = nn.LayerNorm(embed_dim)
         self.dropout = nn.Dropout(dropout)
         
-    # q: query, k: key, v: value
     def forward(self, source, source_mask=None, source_key_padding_mask=None, position=None):
         # if positional encodings are provided, they are added to the source
         if position is not None:
@@ -36,11 +35,11 @@ class EncoderLayer(nn.Module):
             source_with_pos_embed = source
 
         # self attention: the source with positional encodings is used as the query and the key 
-        q = k = source_with_pos_embed
+        query = key = source_with_pos_embed
         
         # this part takes the query and key as input and computes the attention weights
         # the index [0] is used to get the output of the multihead attention layer
-        source2 = self.self_attn(q, k, value=source, attn_mask=source_mask, key_padding_mask=source_key_padding_mask)[0]
+        source2 = self.self_attn(query, key, value=source, attn_mask=source_mask, key_padding_mask=source_key_padding_mask)[0]
         
         # residual connection and layer normalization
         source = source + self.dropout(source2)

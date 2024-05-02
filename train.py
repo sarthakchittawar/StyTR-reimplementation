@@ -10,7 +10,7 @@ from PIL import ImageFile
 import torch.utils.data as data
 from torchvision import transforms
 from torchvision.utils import save_image
-from tensorboardX import SummaryWriter
+from tensorboardX import SummaryWriter # logging outputs without slowing down training
 import transformer
 import stytr as StyTR
 import wandb
