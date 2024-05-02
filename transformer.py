@@ -51,11 +51,12 @@ class Transformer(nn.Module):
         # to ensure fixed size output
         self.average_pool = nn.AdaptiveAvgPool2d(18)
         
-    def forward(self, style, content, pos_encoding_style, pos_encoding_content, mask):
-        positional_content = self.conv(self.average_pool(content))
+    def forward(self, style, content, pos_encoding_style, pos_encoding_content, mask, cape=True):
         
-        # Get the CAPE encoding
-        pos_encoding_content = F.interpolate(positional_content, size=style.shape[-2:], mode='bilinear')
+        if cape:
+            # Get the CAPE encoding
+            positional_content = self.conv(self.average_pool(content))
+            pos_encoding_content = F.interpolate(positional_content, size=style.shape[-2:], mode='bilinear')
         
         # Flatten and permute style and content tensors for compatibility with Transformer layers
         style = style.flatten(2).permute(2, 0, 1)
