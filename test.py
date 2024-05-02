@@ -13,8 +13,7 @@ import stytr as StyTR
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
-from tqdm import tqdm
-
+import time
 def test_transform(size, crop):
     transform_list = []
    
@@ -25,10 +24,10 @@ def test_transform(size, crop):
     transform_list.append(transforms.ToTensor())
     transform = transforms.Compose(transform_list)
     return transform
-
 def style_transform(h,w):
     k = (h,w)
     size = int(np.max(k))
+    print(type(size))
     transform_list = []    
     transform_list.append(transforms.CenterCrop((h,w)))
     transform_list.append(transforms.ToTensor())
@@ -76,8 +75,8 @@ args = parser.parse_args()
 
 
 # Advanced options
-content_size=360
-style_size=360
+content_size=512
+style_size=512
 crop='store_true'
 save_ext='.jpg'
 output_path=args.output
@@ -152,8 +151,10 @@ network.to(device)
 content_tf = test_transform(content_size, crop)
 style_tf = test_transform(style_size, crop)
 
-for content_path in tqdm(content_paths):
-    for style_path in style_paths:   
+for content_path in content_paths:
+    for style_path in style_paths:
+        print(content_path)
+       
       
         content_tf1 = content_transform()       
         content = content_tf(Image.open(content_path).convert("RGB"))
@@ -167,13 +168,14 @@ for content_path in tqdm(content_paths):
         content = content.to(device).unsqueeze(0)
         
         with torch.no_grad():
-            output = network(content,style)   
-        output = output[0]
+            output= network(content,style)       
+        output = output[0].cpu()
                 
-        output_name = '{:s}/{:s}{:s}'.format(
+        output_name = '{:s}/{:s}_stylized_{:s}{:s}'.format(
             output_path, splitext(basename(content_path))[0],
-            save_ext
+            splitext(basename(style_path))[0], save_ext
         )
  
         save_image(output, output_name)
    
+
