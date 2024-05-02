@@ -202,7 +202,7 @@ for i in tqdm(range(args.max_iter)):
     total_loss_sum += loss.sum().cpu().detach().numpy()
 
     if i % 50 == 0 and i != 0:
-        wandb.log({"content_loss":content_loss_sum/50,"style_loss":style_loss_sum/50,"total_image_loss":total_image_loss_sum/50,"feature_loss":feature_loss_sum/50,"total_loss":total_loss_sum/50})
+        wandb.log({"content_loss":content_loss_sum/50,"style_loss":style_loss_sum/50,"total_image_loss":total_image_loss_sum/50,"feature_loss":feature_loss_sum/50,"total_loss":total_loss_sum/50, 'activation_func': args.activation_func, 'batch_size': args.batch_size, 'hidden_dimension': args.hidden_dim, 'lr': args.lr})
         content_loss_sum = 0.0
         style_loss_sum = 0.0
         total_image_loss_sum = 0.0

@@ -12,14 +12,16 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # One layer of the encoder
 class EncoderLayer(nn.Module):
+    ''' Class representing one encoder layer '''
     def __init__(self, embed_dim, num_heads, ff_hidden_dim, dropout, activation_func='relu'):
         super(EncoderLayer, self).__init__()
+        
         self.self_attn = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout)
         
         self.fc1 = nn.Linear(embed_dim, ff_hidden_dim)
         self.fc2 = nn.Linear(ff_hidden_dim, embed_dim)
         
-        self.relu = get_activation_func(activation_func)
+        self.actv = get_activation_func(activation_func)
         self.embed_dim = embed_dim
         self.norm1 = nn.LayerNorm(embed_dim)
         self.norm2 = nn.LayerNorm(embed_dim)
@@ -43,13 +45,14 @@ class EncoderLayer(nn.Module):
         # residual connection and layer normalization
         source = source + self.dropout(source2)
         source = self.norm1(source)
-        source2 = self.fc2(self.relu(self.fc1(source)))
+        source2 = self.fc2(self.actv(self.fc1(source)))
         source = source + self.dropout(source2)
         source = self.norm2(source)
         
         return source
         
 class Encoder(nn.Module):
+    ''' Class representing the Encoder module '''
     def __init__(self, encoder_layer, num_layers, norm=None):
         super().__init__()
         # initialize the layers
