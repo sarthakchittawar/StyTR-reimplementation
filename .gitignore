@@ -7,3 +7,5 @@ videos/
 __pycache__/
 logs/
 train_out.txt
+clip/
+results/
