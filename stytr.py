@@ -3,11 +3,12 @@ import torch.nn.functional as F
 from torch import nn
 import numpy as np
 # from torch._six import container_abcs
-import collections.abc as container_abcs
+import collections.abc as container_abcs # above import statement is deprecated
 from itertools import repeat
 from typing import Optional, List
 from torch import Tensor
 
+# consists of the decoder architecture
 decoder_arch = nn.Sequential(
     nn.ReflectionPad2d((1, 1, 1, 1)),
     nn.Conv2d(512, 256, (3, 3)),
@@ -40,6 +41,7 @@ decoder_arch = nn.Sequential(
     nn.Conv2d(64, 3, (3, 3)),
 )
 
+# consists of the extended encoder backbone architecture out of which a subset is used (i.e. until relu4-1)
 vgg = nn.Sequential(
     nn.Conv2d(3, 3, (1, 1)),
     nn.ReflectionPad2d((1, 1, 1, 1)),
@@ -97,11 +99,13 @@ vgg = nn.Sequential(
 )
 
 def make_tuple(x):
+    ''' Makes a tuple out of an iterable while repeating its elements twice '''
     if isinstance(x, container_abcs.Iterable):
         return x
     return tuple(repeat(x, 2))
 
 class NestedTensor(object):
+    ''' TODO: define this '''
     def __init__(self, tensors, mask: Optional[Tensor]):
         self.tensors = tensors
         self.mask = mask
@@ -123,6 +127,7 @@ class NestedTensor(object):
         return str(self.tensors)
 
 def nested_tensor_from_tensor_list(tensor_list: List[Tensor]):
+    ''' TODO: define this '''
     if tensor_list[0].ndim == 3:        
         l = [list(img.shape) for img in tensor_list]
         max_size = l[0]
@@ -146,6 +151,7 @@ def nested_tensor_from_tensor_list(tensor_list: List[Tensor]):
     return NestedTensor(tensor, mask)
 
 class PatchEmbed(nn.Module):
+    ''' TODO: define this '''
     def __init__(self, img_size=256, patch_size=8, in_channels=3, embed_dim=512):
         super().__init__()
         img_size = make_tuple(img_size)
@@ -162,9 +168,8 @@ class PatchEmbed(nn.Module):
         x = self.proj(x)
         return x
     
-    
 class StyTrans(nn.Module):
-    """ Style Transfer Model """
+    """ Full Style Transfer Module """
     def __init__(self, encoder, decoder, PatchEmbed, transformer, args):
         super().__init__()
         enc_layers = list(encoder.children())
@@ -185,7 +190,7 @@ class StyTrans(nn.Module):
         self.embedding = PatchEmbed
         
     def intermediate_encoding(self, x):
-        """ Get intermediate encoding """
+        """ Get intermediate encodings """
         results = [x]
         for module in [self.enc_1, self.enc_2, self.enc_3, self.enc_4, self.enc_5]:
             x = module(results[-1])
@@ -193,11 +198,13 @@ class StyTrans(nn.Module):
         return results[1:]
     
     def calc_content_loss(self, content_input, content_target):
+        ''' Function to calculate content loss while training '''
         assert content_input.size() == content_target.size()
         assert ~content_target.requires_grad
         return self.mse_loss(content_input, content_target)
     
     def calc_mean_std(self, vec):
+        ''' Function to calculate mean & variance of a vector '''
         size = vec.size()
         assert (len(size) == 4)
         
@@ -208,6 +215,7 @@ class StyTrans(nn.Module):
         return mean, std
     
     def calc_style_loss(self, style_input, style_target):
+        ''' Function to calculate style loss while training '''
         assert style_input.size() == style_target.size()
         assert ~style_target.requires_grad
         
@@ -243,7 +251,7 @@ class StyTrans(nn.Module):
         pos_s = None
         mask = None
         
-        # ours: style, content, pos_encoding_style, pos_encoding_content, mask
+        # forward pass through the transformer
         trans = self.transformer(style_proj, content_proj, pos_s, pos_c, mask)
         
         cs = self.decoder(trans)
