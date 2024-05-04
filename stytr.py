@@ -236,8 +236,6 @@ class StyTrans(nn.Module):
             content = nested_tensor_from_tensor_list(content)
         if isinstance(style, (list, Tensor)):
             style = nested_tensor_from_tensor_list(style)
-        if isinstance(final, (list, Tensor)):
-            final = nested_tensor_from_tensor_list(final)
         
         content_features = self.intermediate_encoding(content.tensors)
         style_features = self.intermediate_encoding(style.tensors)
