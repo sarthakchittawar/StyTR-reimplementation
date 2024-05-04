@@ -27,7 +27,6 @@ def test_transform(size, crop):
 def style_transform(h,w):
     k = (h,w)
     size = int(np.max(k))
-    print(type(size))
     transform_list = []    
     transform_list.append(transforms.CenterCrop((h,w)))
     transform_list.append(transforms.ToTensor())
@@ -65,12 +64,13 @@ parser.add_argument('--embedding_path', type=str, default='experiments/embedding
 
 parser.add_argument('--style_interpolation_weights', type=str, default="")
 parser.add_argument('--a', type=float, default=1.0)
-parser.add_argument('--position_embedding', default='sine', type=str, choices=('sine', 'learned'),
-                        help="Type of positional embedding to use on top of the image features")
+parser.add_argument('--cape', default=True, type=bool, choices=(True, False),
+                        help="Use of Content-Aware Positional Encoding")
 parser.add_argument('--hidden_dim', default=512, type=int,
                         help="Size of the embeddings (dimension of the transformer)")
 args = parser.parse_args()
 
+# python test.py --content <img> --style <img> --output no_cape/<iter> --vgg ./vgg_normalised.pth --decoder_path /scratch/sarthak/train_nocape/decoder_iter_<iter>.pth --Trans_path /scratch/sarthak/train_nocape/transformer_iter_<iter>.pth --embedding_path /scratch/sarthak/train_nocape/embedding_iter_<iter>.pth --cape False
 
 
 
@@ -153,7 +153,6 @@ style_tf = test_transform(style_size, crop)
 
 for content_path in content_paths:
     for style_path in style_paths:
-        print(content_path)
        
       
         content_tf1 = content_transform()       
