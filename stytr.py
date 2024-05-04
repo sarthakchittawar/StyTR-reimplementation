@@ -249,7 +249,7 @@ class StyTrans(nn.Module):
         mask = None
         
         # forward pass through the transformer
-        trans = self.transformer(style_proj, content_proj, pos_s, pos_c, mask, cape=True)
+        trans = self.transformer(style_proj, content_proj, pos_s, pos_c, mask)
         
         cs = self.decoder(trans)
         trans_features = self.intermediate_encoding(cs)

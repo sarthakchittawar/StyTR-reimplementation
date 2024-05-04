@@ -101,8 +101,8 @@ parser.add_argument('--style_weight', type=float, default=10.0)
 parser.add_argument('--content_weight', type=float, default=7.0)
 parser.add_argument('--n_threads', type=int, default=10)
 parser.add_argument('--save_model_interval', type=int, default=10000)
-parser.add_argument('--position_embedding', default='sine', type=str, choices=('sine', 'learned'),
-                        help="Type of positional embedding to use on top of the image features")
+parser.add_argument('--cape', default=True, type=bool, choices=(True, False),
+                        help="Use of Content-Aware Positional Encoding")
 parser.add_argument('--hidden_dim', default=512, type=int,
                         help="Size of the embeddings (dimension of the transformer)")
 parser.add_argument('--num_gpus', default=1, type=int, help="Number of GPUs for training")
@@ -125,7 +125,7 @@ vgg = nn.Sequential(*list(vgg.children())[:44])
 decoder = StyTR.decoder_arch
 embedding = StyTR.PatchEmbed()
 
-Trans = transformer.Transformer(activation_func=args.activation_func)
+Trans = transformer.Transformer(activation_func=args.activation_func, cape=args.cape)
 with torch.no_grad():
     network = StyTR.StyTrans(vgg,decoder,embedding, Trans,args)
 network.train()

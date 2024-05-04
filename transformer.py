@@ -22,7 +22,7 @@ class Transformer(nn.Module):
        The architecture uses Layer Normalisation and dropout layers for training to help stabilize the network and also reduce effects of noise.
     '''
     def __init__(self, dimensions=512, num_heads=8, num_encoder_layers=3, 
-                 num_decoder_layers=3, feedforward_dimensions=2048, dropout=0.1, activation_func='relu'):
+                 num_decoder_layers=3, feedforward_dimensions=2048, dropout=0.1, activation_func='relu', cape=True):
         
         super(Transformer, self).__init__()
         self.dimensions = dimensions
@@ -49,9 +49,12 @@ class Transformer(nn.Module):
         # to ensure fixed size output
         self.average_pool = nn.AdaptiveAvgPool2d(18)
         
-    def forward(self, style, content, pos_encoding_style, pos_encoding_content, mask, cape=True):
+        # bool flag for CAPE
+        self.cape = cape
         
-        if cape:
+    def forward(self, style, content, pos_encoding_style, pos_encoding_content, mask):
+        
+        if self.cape:
             # Get the CAPE encoding
             positional_content = self.conv(self.average_pool(content))
             pos_encoding_content = F.interpolate(positional_content, size=style.shape[-2:], mode='bilinear')
