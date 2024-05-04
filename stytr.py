@@ -236,6 +236,8 @@ class StyTrans(nn.Module):
             content = nested_tensor_from_tensor_list(content)
         if isinstance(style, (list, Tensor)):
             style = nested_tensor_from_tensor_list(style)
+        if isinstance(final, (list, Tensor)):
+            final = nested_tensor_from_tensor_list(final)
         
         content_features = self.intermediate_encoding(content.tensors)
         style_features = self.intermediate_encoding(style.tensors)
@@ -255,26 +257,16 @@ class StyTrans(nn.Module):
         trans_features = self.intermediate_encoding(cs)
         
         # content loss
-        content_input = trans_features[-1]
-        m, s = self.calc_mean_std(content_input)
-        normalised_content_input = (content_input - m) / s
-        
-        content_target = content_features[-1]
-        m, s = self.calc_mean_std(content_target)
-        normalised_content_target = (content_target - m) / s
-        
-        content_loss = self.calc_content_loss(normalised_content_input, normalised_content_target)
-        
-        content_input = trans_features[-2]
-        m, s = self.calc_mean_std(content_input)
-        normalised_content_input = (content_input - m) / s
-        
-        content_target = content_features[-2]
-        m, s = self.calc_mean_std(content_target)
-        normalised_content_target = (content_target - m) / s
-        
-        content_loss += self.calc_content_loss(normalised_content_input, normalised_content_target)
-        
+        content_loss = 0
+        for i in range(5):
+            content_input = trans_features[i]
+            m, s = self.calc_mean_std(content_input)
+            normalised_content_input = (content_input - m) / s
+            content_target = content_features[i]
+            m, s = self.calc_mean_std(content_target)
+            normalised_content_target = (content_target - m) / s
+            content_loss += self.calc_content_loss(normalised_content_input, normalised_content_target)
+
         # style loss
         style_loss = 0
         for i in range(5):
