@@ -6,3 +6,26 @@
 
 ## Training
 `python3 train.py` + additional arguments as specified in the file
+
+## Using the model with CLIP
+`python3 style_with_clip.py` + change file paths in the file
+
+## Calculating loss if content, style and final image given
+`python3 loss.py` + change file paths in the file
+
+## Directory Structure
+```
+├── README.md
+├── transformer files
+├── clip
+│   ├── finetuneclip.py (finetune clip)
+│   ├── metadata.json (metadata of all the wikiart images)
+│   ├── styles.txt (different styles)
+│   ├── styles_desc.txt (description of styles)
+├── content (content images)
+├── style (style images)
+├── output (output images)
+├── videos
+│   ├── video_Stabilisztion.ipynb (python notebook with all the relevant code)
+│   ├── video files
+```
