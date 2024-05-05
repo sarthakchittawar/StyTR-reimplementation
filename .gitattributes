@@ -1,0 +1,8 @@
+clip/encodings.pt filter=lfs diff=lfs merge=lfs -text
+clip/model_9.pt filter=lfs diff=lfs merge=lfs -text
+experiments/* filter=lfs diff=lfs merge=lfs -text
+experiments/*.pt filter=lfs diff=lfs merge=lfs -text
+experiments/embedding_iter_160000.pth filter=lfs diff=lfs merge=lfs -text
+experiments/transformer_iter_160000.pth filter=lfs diff=lfs merge=lfs -text
+experiments/vgg_normalised.pth filter=lfs diff=lfs merge=lfs -text
+experiments/decoder_iter_160000.pth filter=lfs diff=lfs merge=lfs -text

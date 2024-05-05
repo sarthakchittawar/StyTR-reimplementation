@@ -87,7 +87,7 @@ parser.add_argument('--content_dir', default='/scratch/sarthak/datasets/train201
                     help='Directory path to a batch of content images')
 parser.add_argument('--style_dir', default='/scratch/sarthak/datasets/style', type=str,
                     help='Directory path to a batch of style images')
-parser.add_argument('--vgg', type=str, default='./vgg_normalised.pth')
+parser.add_argument('--vgg', type=str, default='experiments/vgg_normalised.pth')
 
 parser.add_argument('--save_dir', default='./experiments',
                     help='Directory to save the model')
